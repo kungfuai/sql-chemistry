@@ -12,10 +12,14 @@ def setUpModule():
     os.environ['ENV'] = 'TEST'
 
 
+def tearDownModule():
+    os.environ['ENV'] = ''
+
+
 class CreateDbConnectionTest(unittest.TestCase):
 
     def setUp(self):
-        e = Environment('./env')
+        e = Environment('./kfai_sql_chemistry/test/env')
         e.register_environment("TEST")
         e.load_env()
 

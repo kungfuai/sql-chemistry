@@ -21,7 +21,7 @@ def tearDownModule():
 class AWSAutoConfigTest(unittest.TestCase):
 
     def setUp(self):
-        e = Environment('./env')
+        e = Environment('./kfai_sql_chemistry/test/env')
         e.register_environment("AWS-TEST")
         e.load_env()
 
@@ -36,10 +36,11 @@ class AWSAutoConfigTest(unittest.TestCase):
             db_name='postgres',
             dbname=''
         )
-        conn = boto3.client("secretsmanager", region_name="us-west-1")
+        conn = boto3.client("secretsmanager")
         conn.create_secret(
             Name="SOMEFAKESECRETID", SecretString=cfg.to_json()
         )
+        print(conn.get_secret_value(SecretId='SOMEFAKESECRETID'))
 
         database_map: Dict[str, DatabaseConfig] = {
             # Act
