@@ -1,0 +1,2 @@
+include versioneer.py
+include kfai_sql_chemistry/_version.py
