@@ -1,4 +1,4 @@
-kungufai-env==0.2.0
+kungfuai-env==0.2.1
 dataclasses-json==0.5.2
 SQLAlchemy==1.4.5
 SQLAlchemy-Utils==0.36.8
