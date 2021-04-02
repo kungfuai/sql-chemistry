@@ -26,7 +26,7 @@ setup(
     ],
     packages=find_packages(exclude=(
         "examples",
-        "kfai_sql_chemistry/tests",
+        "kfai_sql_chemistry/test",
     )),
     install_requires=[
         "kungfuai-env",

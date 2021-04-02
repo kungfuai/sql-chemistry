@@ -14,6 +14,10 @@ def setUpModule():
     os.environ['ENV'] = 'AWS-TEST'
 
 
+def tearDownModule():
+    os.environ['ENV'] = ''
+
+
 class AWSAutoConfigTest(unittest.TestCase):
 
     def setUp(self):
