@@ -12,6 +12,7 @@ def register_databases(db_map: Dict[str, DatabaseConfig]):
     Use this function to start up your application.
     :return:
     """
-    _db_map.update(db_map)
+    global _db_map
+    _db_map = db_map
     engines.create_all_engines(_db_map)
 

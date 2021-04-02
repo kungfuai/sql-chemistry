@@ -6,7 +6,7 @@ import boto3
 from kfai_env.environment.register import Environment
 from moto import mock_secretsmanager
 
-from kfai_sql_chemistry.aws.aws_db_config import AwsConfig
+from kfai_sql_chemistry.aws.aws_db_config import AwsDbConfig
 from kfai_sql_chemistry.db.database_config import DatabaseConfig
 
 
@@ -43,8 +43,7 @@ class AWSAutoConfigTest(unittest.TestCase):
         print(conn.get_secret_value(SecretId='SOMEFAKESECRETID'))
 
         database_map: Dict[str, DatabaseConfig] = {
-            # Act
-            "main": AwsConfig().detect_db_config('main')
+            "main": AwsDbConfig().detect_db_config('main')
         }
 
         assert database_map['main'] == cfg

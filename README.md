@@ -59,7 +59,7 @@ Python 3.8
 
 ### Installation
 
-`pip install kungfuai-env`
+`pip install kungfuai-sql-chemistry`
 
 <!-- ROADMAP -->
 ## Roadmap
