@@ -3,7 +3,7 @@ import unittest
 from typing import Dict
 
 import boto3
-from kfai_env.environment.register import Environment
+from kfai_env import Environment
 from moto import mock_secretsmanager
 
 from kfai_sql_chemistry.aws.aws_db_config import AwsDbConfig
