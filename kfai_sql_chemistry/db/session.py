@@ -29,5 +29,9 @@ class AppSession:
         return self.instance
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
+        if exc_type:
+            logger.error("Exception found: Rollback Transaction")
+            self.instance.rollback()
+
         self.instance.close()
 

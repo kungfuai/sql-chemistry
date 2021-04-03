@@ -1,6 +1,6 @@
 from typing import Dict
 
-from kfai_env.environment.register import Environment
+from kfai_env import Environment
 
 from kfai_sql_chemistry.db.database_config import DatabaseConfig
 
@@ -8,7 +8,7 @@ from kfai_sql_chemistry.db.database_config import DatabaseConfig
 from kfai_sql_chemistry.db.main import register_databases
 from kfai_sql_chemistry.db.session import AppSession
 
-e = Environment('./env')
+e = Environment('examples/2_multi_db_connection/env')
 e.load_env()
 
 database_map: Dict[str, DatabaseConfig] = {

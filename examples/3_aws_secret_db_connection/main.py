@@ -1,6 +1,6 @@
 from typing import Dict
 
-from kfai_env.environment.register import Environment
+from kfai_env import Environment
 
 from kfai_sql_chemistry.aws.aws_db_config import AwsDbConfig
 from kfai_sql_chemistry.db.database_config import DatabaseConfig
