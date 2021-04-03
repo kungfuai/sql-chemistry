@@ -15,7 +15,7 @@ setup(
     description="Environment handling to simplify development environments",
     long_description=README,
     long_description_content_type="text/markdown",
-    url="https://github.com/kungfuai/env",
+    url="https://github.com/kungfuai/sql-chemistry",
     author="Endurance Idehen",
     author_email="endurance.idehen@kungfu.ai",
     license="MIT",
@@ -24,10 +24,12 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.8",
     ],
-    packages=find_packages(exclude=(
-        "examples",
-        "test",
-    )),
+    packages=find_packages(
+        exclude=(
+            "examples",
+            "test",
+        )
+    ),
     install_requires=[
         "kungfuai-env",
         "dataclasses-json",
