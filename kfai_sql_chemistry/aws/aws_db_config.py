@@ -16,10 +16,13 @@ def _create_default_client():
 class AwsDbConfig:
 
     def __init__(self, boto3_secrets_client=None):
-        if not boto3_secrets_client:
-            self._boto3_secrets_client = _create_default_client()
+        self._boto3_secrets_client = boto3_secrets_client
+
+    def _secrets_client(self):
+        if not self._boto3_secrets_client:
+            return _create_default_client()
         else:
-            self._boto3_secrets_client = boto3_secrets_client
+            return self._boto3_secrets_client
 
     def detect_db_config(self, db_name: str) -> DatabaseConfig:
         db_name_str = db_name.upper()
@@ -36,7 +39,7 @@ class AwsDbConfig:
             return self._get_local_config(db_name_str)
 
     def _get_aws_config(self, secret_id) -> DatabaseConfig:
-        secret_client = self._boto3_secrets_client
+        secret_client = self._secrets_client()
         raw_secret_value = secret_client.get_secret_value(SecretId=secret_id)
         sv = SecretValue(**raw_secret_value)
         return DatabaseConfig.from_json(sv.SecretString)
