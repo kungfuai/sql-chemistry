@@ -31,7 +31,6 @@ setup(
         )
     ),
     install_requires=[
-        "kungfuai-env",
         "dataclasses-json",
         "SQLAlchemy",
         "SQLAlchemy-Utils",

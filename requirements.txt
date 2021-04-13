@@ -1,8 +1,10 @@
-kungfuai-env==0.2.1
 dataclasses-json==0.5.2
 SQLAlchemy==1.4.5
 SQLAlchemy-Utils==0.36.8
 psycopg2-binary==2.8.6
 boto3==1.17.44
+
+# Example/Test requirements
+kungfuai-env==0.2.1
 moto==2.0.4
 pytest==6.2.2
