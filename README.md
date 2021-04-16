@@ -71,6 +71,12 @@ database_map = {
 register_database(database_map)
 ```
 
+Access your SQLAlchemy engines through the `engines` import.
+After you've called `register_databases`, the configuration has already been detected and setup for usage.
+```
+from kfai_sql_chemistry.db.main import engines
+```
+
 Notes:
 - Place this code in your `__init__.py` in your `src` directory. 
   `AppSession` will know use the engines created from the `register_database` call.
