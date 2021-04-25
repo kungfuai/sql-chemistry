@@ -78,18 +78,18 @@ from kfai_sql_chemistry.db.main import engines
 ```
 
 Notes:
-- Place this code in your `__init__.py` in your `src` directory. 
-  `AppSession` will know use the engines created from the `register_database` call.
+- Create your `database_map` and call `register_database` only once within your app.
+  From then on, all sessions you create through this library will use the corresponding underlying engine
   
-
+  
 - If your environment has a AWS Secret Key, then the auto-detection will use it.
   
-
+  
 - We identify the config based on the input "db_name". For instance, `main` will map to a
   secret key in `env` named MAIN_DB_SECRET_ID.
   
 
-- If no secret ID is found, we search for a db config listing. Please view the example envs to view the requirements.
+- If no secret ID is found, we search for a db config listing. Please view the example env configurations to view the requirements.
 
 
 
