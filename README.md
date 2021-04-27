@@ -78,6 +78,7 @@ def db_init():
 from kfai_sql_chemistry.db.main import engines
 ```
 
+
 - Use `AppSession().get_bind()` to access the connectable directly (likely an engine)
 
 
