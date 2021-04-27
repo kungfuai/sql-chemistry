@@ -21,8 +21,11 @@ class AwsDbConfig:
     def _secrets_client(self):
         if not self._boto3_secrets_client:
             return _create_default_client()
-        else:
-            return self._boto3_secrets_client
+
+        if callable(self._boto3_secrets_client):
+            return self._boto3_secrets_client()
+
+        return self._boto3_secrets_client
 
     def detect_db_config(self, db_name: str) -> DatabaseConfig:
         db_name_str = db_name.upper()

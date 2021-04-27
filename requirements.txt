@@ -8,3 +8,5 @@ boto3==1.17.44
 kungfuai-env==0.2.1
 moto==2.0.4
 pytest==6.2.2
+taskipy
+poetry

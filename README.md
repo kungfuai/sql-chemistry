@@ -61,36 +61,35 @@ Python 3.8
 
 `pip install kungfuai-sql-chemistry`
 
-#### Automatic Connection to AWS
+#### Database Registration
 Simply create a database dictionary, and call the `register_database` entrypoint.
-```python
-database_map = {
-    "main": AwsDbConfig().detect_db_config("main")
-}
 
-register_database(database_map)
+```python
+def db_init():
+  database_map = {
+      "main": AwsDbConfig().detect_db_config("main")
+  }
+  register_databases(database_map)
 ```
 
-Access your SQLAlchemy engines through the `engines` import.
-After you've called `register_databases`, the configuration has already been detected and setup for usage.
+#### Engine access
+- Use this import to access all engines
 ```
 from kfai_sql_chemistry.db.main import engines
 ```
 
-Notes:
-- Place this code in your `__init__.py` in your `src` directory. 
-  `AppSession` will know use the engines created from the `register_database` call.
-  
+- Use `AppSession().get_bind()` to access the connectable directly (likely an engine)
 
-- If your environment has a AWS Secret Key, then the auto-detection will use it.
-  
 
-- We identify the config based on the input "db_name". For instance, `main` will map to a
-  secret key in `env` named MAIN_DB_SECRET_ID.
-  
+#### Configuration Identification
+AwsDbConfig searches by the following convention
 
-- If no secret ID is found, we search for a db config listing. Please view the example envs to view the requirements.
+1. Search for {prefix}_DB_SECRET_ID
+2. Search for {prefix}_DB_HOST / PORT / NAME / etc...
 
+where `prefix` is a name like "MAIN". 
+
+Check the examples in the repo for more information.
 
 
 <!-- ROADMAP -->
