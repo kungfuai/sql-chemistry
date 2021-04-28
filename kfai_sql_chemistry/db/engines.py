@@ -14,7 +14,14 @@ class SQLEngineFactory:
     def create_all_engines(self, database_map: Dict[str, DatabaseConfig]):
         for db_name in database_map.keys():
             cfg = database_map[db_name]
-            engine: Engine = create_engine(cfg.make_url(), pool_recycle=3600)
+            # https://docs.sqlalchemy.org/en/13/dialects/mysql.html#charset-selection
+            # Mysql requires specific encoding
+            if "mysql" in cfg.engine:
+                engine: Engine = create_engine(
+                    cfg.make_url(), encoding='utf8mb4', pool_recycle=3600
+                )
+            else:
+                engine: Engine = create_engine(cfg.make_url(), pool_recycle=3600)
             self._engines[db_name] = engine
 
     def get_engine(self, db_name) -> Engine:
