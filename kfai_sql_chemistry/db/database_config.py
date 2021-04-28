@@ -20,7 +20,7 @@ class DatabaseConfig:
     @staticmethod
     def from_local_env(prefix_str: str):
         prefix_caps = prefix_str.upper()
-        return DatabaseConfig(
+        cfg = DatabaseConfig(
             username=os.getenv(f"{prefix_caps}_DB_USERNAME"),
             password=os.getenv(f"{prefix_caps}_DB_PASSWORD"),
             engine=os.getenv(f"{prefix_caps}_DB_ENGINE"),
@@ -28,6 +28,7 @@ class DatabaseConfig:
             port=int(os.getenv(f"{prefix_caps}_DB_PORT")),
             db_name=os.getenv(f"{prefix_caps}_DB_NAME"),
         )
+        return cfg
 
     def make_url(self):
         return URL(
