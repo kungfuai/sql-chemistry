@@ -30,12 +30,13 @@ class DatabaseConfig:
         )
         return cfg
 
-    def make_url(self):
+    def make_url(self, query=None):
         return URL(
             self.engine,
             username=self.username,
             password=self.password,
             host=self.host,
             port=self.port,
-            database=self.dbname or self.db_name
+            database=self.dbname or self.db_name,
+            query=query
         )

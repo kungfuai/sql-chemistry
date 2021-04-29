@@ -17,10 +17,8 @@ class SQLEngineFactory:
             # https://docs.sqlalchemy.org/en/13/dialects/mysql.html#charset-selection
             # Mysql requires specific encoding
             if "mysql" in cfg.engine:
-                print(cfg.make_url())
-                engine: Engine = create_engine(
-                    f"{cfg.make_url()}?charset=utf8mb4", pool_recycle=3600
-                )
+                url = cfg.make_url(query={'charset': 'utf8mb4'})
+                engine: Engine = create_engine(f"{url}", pool_recycle=3600)
             else:
                 engine: Engine = create_engine(cfg.make_url(), pool_recycle=3600)
             self._engines[db_name] = engine
