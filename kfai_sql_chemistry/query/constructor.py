@@ -3,6 +3,7 @@ from typing import List
 import logging
 
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import text
 
 from kfai_sql_chemistry.db.main import engines
 
@@ -15,24 +16,10 @@ class QueryConstructor:
         self._table_name = table_name
         self._values = value
 
-    def execute_session(self, session, statement):
-        result = session.execute(statement)
-        return result
-
-    def filter(self, session, _values: List[int]) -> List[str]:
-        statement = (self._table_name).filter(self._column.in_(self._values)).all()
-        return self.execute_session(session, statement)
-
     def join(self, session):
-        statement = (self._table_name).join(self._column)
-        return self.execute_session(session, statement)
+        #statement = self._table_name.join(self._column)
+        #statement = '''select * from Car'''
+        return session.query(self._table_name).join(self._column).all()
 
-    def order(self, session):
-        statement = (self._table_name).order_by(self._column)
-        return self.execute_session(session, statement)
-
-    def group(self, session):
-        statement = (self._table_name).group_by(self._column)
-        return self.execute_session(session, statement)
 
 
