@@ -22,7 +22,7 @@ class QueryConstructorTest(unittest.TestCase):
         e.load_env()
 
         database_map: Dict[str, DatabaseConfig] = {
-            "main": DatabaseConfig.from_local_env("main")
+            "test": DatabaseConfig.from_local_env("main")
         }
 
         register_databases(database_map)
@@ -35,6 +35,15 @@ class QueryConstructorTest(unittest.TestCase):
 
     def test_something(self):
         pass
-        # figure out how to handle inputs
-        # QueryConstructor.join(session)
+
+
+
+
+
+
+    test = engines.get_engine("test_db")
+    setup_db_for_tests(test, VehicleTestDbModel.metadata)
+
+    # figure out how to handle inputs
+    QueryConstructor.join(session)
 
