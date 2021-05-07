@@ -15,7 +15,7 @@ class QueryConstructor:
         self._table_name = table_name
         self._values = value
 
-    def execute_session(session, statement):
+    def execute_session(self, session, statement):
         result = session.execute(statement)
         return result
 
@@ -34,3 +34,5 @@ class QueryConstructor:
     def group(self, session):
         statement = (self._table_name).group_by(self._column)
         return self.execute_session(session, statement)
+
+

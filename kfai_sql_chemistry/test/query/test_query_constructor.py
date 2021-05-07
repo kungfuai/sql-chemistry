@@ -8,6 +8,7 @@ from moto import mock_secretsmanager
 
 from kfai_sql_chemistry.aws.aws_db_config import AwsDbConfig
 from kfai_sql_chemistry.db.database_config import DatabaseConfig
+from kfai_sql_chemistry.utils.setup_for_testing import setup_db_for_tests
 
 
 class QueryConstructorTest(unittest.TestCase):
@@ -21,30 +22,31 @@ class QueryConstructorTest(unittest.TestCase):
     def tearDown(self):
         os.environ['ENV'] = ''
 
-    def test_join(self):
 
+    # start the database session as session here
 
+    VehicleTestDbModel = declarative_base()
 
-    def test_autodetect(self):
-        cfg = DatabaseConfig(
-            username='postgres',
-            password='password',
-            engine='postgresql',
-            host='localhost',
-            port=9000,
-            db_name='postgres',
-            dbname=''
-        )
-        conn = boto3.client("secretsmanager")
-        conn.create_secret(
-            Name="SOMEFAKESECRETID", SecretString=cfg.to_json()
-        )
-        print(conn.get_secret_value(SecretId='SOMEFAKESECRETID'))
+    class CarModel(VehicleTestDbModel):
+        __tablename__ = "Car"
 
-        database_map: Dict[str, DatabaseConfig] = {
-            "main": AwsDbConfig().detect_db_config('main')
-        }
+        car_id = Column("CarId", Integer, primary_key=True, autoincrement=True)
+        car_make = Column("CarMake", String(100))
+        car_model = Column("CarModel", String(100))
+        car_year = Column("CarYear", Integer)
+        car_type = Column("CarType", String(25))
 
-        assert database_map['main'] == cfg
+    class DriverModel(VehicleTestDbModel):
+        __tablename__ = "Driver"
 
+        driver_id = Column("DriverId", Integer, primary_key=True, autoincrement=True)
+        driver_first_name = Column("DriverFirstName", String(100))
+        driver_last_name = Column("DriverLastName", String(100))
+        driver_state = Column("DriverState", String(2))
+
+    test = engines.get_engine("test_db")
+    setup_db_for_tests(test, VehicleTestDbModel.metadata)
+
+    # figure out how to handle inputs
+    QueryConstructor.join(session)
 
