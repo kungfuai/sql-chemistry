@@ -4,7 +4,6 @@ from sqlalchemy.schema import (DropConstraint, DropTable, ForeignKeyConstraint, 
 
 def setup_db_for_tests(engine, metadata):
     with engine.connect() as connection:
-        connection.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
         metadata.create_all(engine)
 
 
