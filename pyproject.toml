@@ -1,3 +1,4 @@
 
 [tool.taskipy.tasks]
+"db:start"            = "docker-compose run --service-ports -d test_db"
 "test"                = "python -m pytest"
