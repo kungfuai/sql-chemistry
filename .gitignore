@@ -139,7 +139,3 @@ cython_debug/
 build/
 dist/
 *.egg-info/
-
-
-*.DS_Store
-*.idea
