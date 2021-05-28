@@ -210,7 +210,7 @@ The SQL example for a left join is:
 select *
 from TableModel t
 left join ExampleModel e
-  on e.example_colukmn = t.table_column
+  on e.example_column = t.table_column
 ```
 
 To do this, we use the outerjoin function.
@@ -255,25 +255,38 @@ https://stackoverflow.com/questions/20361017/sqlalchemy-full-outer-join # full o
 
 
 #### Subquerying using the query function
+Let's say Tony has a lot of pets, and we wanted to find all the names of dogs that Tony has. Let's say that this was in two tables: Owner and Dog. We can use a subquery to break down the Owner table to first find Tony, and then use that smaller table to then find the names of pet dogs that he has.
 The SQL example we are trying to do:
 ```sql
-select column1 as dog_name, column2 as dog_breed, column3 as dog_cuteness_level
+select column1 as owner_name, column2 as dog_name, column3 as dog_cuteness_level
 from (
-    select *
-    from 
-)
-limit 100
+    select owner_name, pet_name
+    from OwnerModel o
+    where o.owner_name = 'Tony'
+) t1
+inner join DogModel d
+  on d.owner_name = o.owner_name
 ```
 
-Leverage the query function to "create" a table from a subquery.
+First, leverage the query function to "create" a table from a subquery.
 
 ```python
 with AppSession("test") as session:
-    session.query(
-        TableModel.column1
-    )
-
+    t1 = session.query(
+        OwnerModel.owner_name,
+        OwnerModel.pet_name
+    ).filter_by(owner_name= 'Tony')
 ```
+
+Then, use that "subtable" of the OwnerModel to join on DogModel using a subquery. For these purposes, lets assume that OwnerModel's primary key is owner_name and DogModel's foreign key is owner_name.
+
+```python
+with AppSession("test") as session:
+    session.query(t1).join(DogModel)
+```
+
+Essentially, subquerying is done by saving the "subtable" of a model to a variable, which can then by used as an alias for that "subtable" in the next query.
+
 
 #### Load a relationship with a specific loader option
 ```python
