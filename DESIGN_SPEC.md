@@ -271,7 +271,7 @@ inner join DogModel d
 First, leverage the query function to "create" a table from a subquery.
 
 ```python
-with AppSession("test") as session:
+with AppSession("test") as session:    
     t1 = session.query(
         OwnerModel.owner_name,
         OwnerModel.pet_name
@@ -279,9 +279,9 @@ with AppSession("test") as session:
 ```
 
 Then, use that "subtable" of the OwnerModel to join on DogModel using a subquery. For these purposes, lets assume that OwnerModel's primary key is owner_name and DogModel's foreign key is owner_name.
+Make sure that the query using the subquery is within the same session.
 
 ```python
-with AppSession("test") as session:
     session.query(t1).join(DogModel)
 ```
 
