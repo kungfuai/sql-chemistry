@@ -35,98 +35,67 @@ Table: employees
 Primary key: employee_id
 
 employee_id | employee_name  
------------------------------
+------------|----------------
 1			|	Endurance
------------------------------
 2			|	Tony
------------------------------
-3			|	Krishi	
------------------------------
-4			|	Max M.	
------------------------------
+3			|	Krishi
+4			|	Max M.
 5 			|	Reed C.
------------------------------
 
 Table: pets
 Primary key: pet_name
 Foreign key: employee_id
 
 pet_name    | employee_id   
------------------------------
+------------|----------------
 Intel		|	1
------------------------------
 Misa		|	1
------------------------------
 Java	   	|	1	
------------------------------
 Shadow		|	2
------------------------------
 Callie  	|	4
------------------------------
 Yoshi		|	4
------------------------------
 Deohgie		|	4
------------------------------
 
 Table: pet_info
 Primary key: pet_name
 
 pet_name    | pet_species   | pet_breed
-------------------------------------------
+------------|---------------|-------------
 Intel		|	cat         | persian
-------------------------------------------
 Misa		|	cat         | siamese
-------------------------------------------
 Java	   	|	cat         | shorthair
-------------------------------------------
 Shadow		|	dog         | dachshund
-------------------------------------------
 Callie  	|	cat         | persian
-------------------------------------------
 Yoshi		|	bird        | parrot
-------------------------------------------
 Deohgie		|	dog         | husky
-------------------------------------------
 
 Table: insurance
 Primary key: pet_name
 
 employee_id | pet_name      | insured?
-------------------------------------------
+------------|---------------|-------------
 1			|	Intel       | True
-------------------------------------------
 1			|	Misa        | False
-------------------------------------------
 1			|	Java	    | True
-------------------------------------------
 2			|	Shadow	    | True
-------------------------------------------
 4 	        |	Callie      | True 
-------------------------------------------
 4	    	|	Yoshi       | False
-------------------------------------------
 4	     	|	Deohgie		| False
-------------------------------------------
 
 Table: office_pets
 Primary key: pet_breed
 
 pet_breed   | allowed_in_office   
---------------------------------
-persian		|	1
---------------------------------
-siamese		|	1
---------------------------------
-shorthair 	|	1	
---------------------------------
-dachschund	|	1
---------------------------------
-persian 	|	1
---------------------------------
-parrot		|	0
---------------------------------
-husky		|	0
---------------------------------
+------------|-------------------
+persian		|	True
+siamese		|	True
+shorthair 	|	True	
+dachschund	|	True
+persian 	|	True
+parrot		|	False
+husky		|	False
+
+<mark>Standards to follow: 1. whenever there is an ID column that has unique values and is a primary key, use UUID (employee_id column is the example in our tables above) 2. whenever there is a column with boolean values, use True/False as the values, as constraining the domain of possible values can help prevent errors</mark>
 
 
 ### Creating Models and Relationships From the Tables
@@ -136,6 +105,7 @@ The model inherits from a base model that the SQLAlchemy ORM library has created
 
 ```python
 from sqlalchemy import Column, Integer, String, relationship
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base
 
 BaseDbModel = declarative_base()
@@ -144,46 +114,45 @@ BaseDbModel = declarative_base()
 class EmployeesModel(BaseDbModel):
     __tablename__ = "employees"
 
-    employee_id = Column("EmployeeId", String(100), primary_key=True, autoincrement=True)		
-    employee_name = Column("EmployeeName", String(100))
+    employee_id = Column("employee_id", UUID(as_uuid=True), primary_key=True, autoincrement=True, default=uuid4)		
+    employee_name = Column("employee_name", String(100))
 
-    pets = relationship("PetsModel", back_populates="employees")
+    pets = relationship(PetsModel, back_populates="employees")
 
 
 class PetsModel(BaseDbModel):
     __tablename__ = "pets"
 
-    pet_name = Column("PetName", String(100), primary_key=True)
-    employee_id = Column("EmplyeeId", String(100), ForeignKey(employees.employee_id))
+    pet_name = Column("pet_name", String(100), primary_key=True)
+    employee_id = Column(UUID(as_uuid=True), default=uuid4, ForeignKey(employees.employee_id))
 
-    employees = relationship("EmployeesModel", back_populates="pets")
-    pet_info = relationship("PetInfoModel", back_populates="pets_petinfo")
+    employees = relationship(EmployeesModel, back_populates="pets")
+    petinfo = relationship(PetInfoModel, back_populates="petinfo")
 
 
 class PetInfoModel(BaseDbModel):
     __tablename__ = "pet_info"
 
-    pet_name = Column("Id", String(100), primary_key=True)
-    pet_species = Column("PetSpecies", String(100))
-    pet_breed = Column("PetBreed", String(100))
+    pet_name = Column("pet_name", String(100), primary_key=True)
+    pet_species = Column("pet_species", String(100))
+    pet_breed = Column("pet_breed", String(100))
 
-    pet_petinfo = relationship("PetsModel", back_populates="pet_info")
+    petinfo = relationship(PetsModel, back_populates="petinfo")
 
 
 class InsuranceModel(BaseDbModel):
     __tablename__ = "insurance"
 
-    employee_id = Column("EmployeeId", String(100))
-    pet_name = Column("FirstName", String(100))
-    insured = Column("Insured", Boolean)
+    employee_id = Column("employee_id", UUID(as_uuid=True), primary_key=True, default=uuid4)
+    pet_name = Column("pet_name", String(100))
+    insured = Column("insured", Boolean)
 
 
 class OfficePetsModel(BaseDbModel):
     __tablename__ = "office_pets"
 
-    pet_breed = Column("PetBreed", Integer, primary_key=True, autoincrement=True)
-    allowed_in_office = Column("AllowedInOffice", Boolean, create_constraint=True, name='valid_bool')
-    valid_bool = CheckConstraint('allowed_in_office in (1, 0)', name='valid_bool')
+    pet_breed = Column("pet_breed", String(100), primary_key=True)
+    allowed_in_office = Column("allowed_in_office", Boolean)
 ```
 
 
@@ -195,7 +164,7 @@ We are going to show some common queries using made-up problems that utilize our
 Let's say we only want to know the names of the pet name and pet breed at KF. This the SQL:
 ```sql
 select pet_name, pet_breed
-from PetInfoModel
+from pet_info
 ```
 
 Using SQLAlchemy ORM syntax, we would have two ways to load a certain set of columns:
@@ -224,15 +193,15 @@ Let's say that we want to rename the columsn that we just selected to be specifi
 The SQL example we are trying to do:
 ```sql
 select pet_name as kf_pet_name, pet_breed as kf_pet_breed
-from PetInfoModel
+from pet_info
 ```
 
 This can be done in SQL Alchemy ORM like this:
 ```python
 with AppSession("kungfu_pets") as session:
     session.query(
-        PetInfoModel.column1.label("kf_pet_name"),
-        PetInfoModel.column2.label("kf_pet_breed")
+        PetInfoModel.pet_name.label("kf_pet_name"),
+        PetInfoModel.pet_breed.label("kf_pet_breed")
         )
     .all()
 ```
@@ -246,7 +215,7 @@ Let's say we only want information about five pets at KF (short attention span, 
 The SQL example we are trying to do:
 ```sql
 select pet_name, pet_breed
-from PetInfoModel
+from pet_info
 limit 5
 ```
 
@@ -265,13 +234,13 @@ Now that we've looked at pet names and pet breeds, we want to know which ones ar
 The SQL example we are trying to do:
 ```sql
 select *
-from OfficePetsModel
+from office_pets
 where allowed_in_office = 1
 ```
 
 There are two ways to do this in SQLAlchemy ORM.
 
-1. Use filter and specify the model, with column name as an attribute (Pythonic, hence 2 equals signs)
+1. Use filter and specify the model, with column name as an attribute (allows for filtering on columns not pulled in by query clause)
 ```python
 with AppSession("kungfu_pets") as session:
     session.query(OfficePetsModel)
@@ -279,7 +248,7 @@ with AppSession("kungfu_pets") as session:
     .all()
 ```
 
-2. Use filter_by and specify just the attribute (SQLish, hence 1 equals sign)
+2. Use filter_by and specify just the attribute (uses keyword args, relies on columns pulled in query clause)
 ```python
 with AppSession("kungfu_pets") as session:
     session.query(OfficePetsModel)
@@ -298,7 +267,7 @@ We want to know pet names for members of the Software Engineering team, which we
 The SQL example we are trying to do:
 ```sql
 select *
-from PetsModel
+from pets
 where employee_id in (1, 2, 3)
 ```
 
@@ -309,7 +278,7 @@ list_of_values = [1, 2, 3]
 
 with AppSession("kungfu_pets") as session:
     session.query(PetsModel)
-    .filter(PetsModel.employee_id._in(list_of_values))
+    .filter(PetsModel.employee_id.in_(list_of_values))
     .all()
 ```
 
@@ -323,7 +292,7 @@ Let's say we want to take a quick look at pet names of members who are not part 
 The SQL example we are trying to do:
 ```sql
 select *
-from PetsModel
+from pets
 where employee_id not in (1, 2, 3)
 ```
 
@@ -334,7 +303,7 @@ list_of_values = [1, 2, 3]
 
 with AppSession("kungfu_pets") as session:
     session.query(PetsModel)
-    .filter(not_(PetsModel.employee_id._in(list_of_values)))
+    .filter(not_(PetsModel.employee_id.in_(list_of_values)))
     .all()
 ```
 
@@ -349,11 +318,11 @@ To do this, we can use something similar to what we used to find which pets were
 The SQL example we are trying to do:
 ```sql
 select *
-from PetsModel
+from pets
 where employee_id > 0 and employee_id <= 3
 ```
 
-To do this, we use the _and operator along with filter, as below:
+To do this, we use the and_ operator along with filter, as below:
 ```python
 with AppSession("kungfu_pets") as session:
     session.query(PetsModel)
@@ -370,8 +339,8 @@ Having a list of pet names by employee_ids is great, but having a list of pet na
 The SQL example we are trying to do:
 ```sql
 select *
-from EmployeesModel e
-join PetsModel p
+from employees e
+join pets p
   on p.employee_id = e.employee_id
 ```
 
@@ -416,20 +385,22 @@ To do the left join, we know that we want to use the PetsModel and join only emp
 The SQL example for a left join is:
 ```sql
 select *
-from PetsModel p
-left join EmployeesModel e
+from pets p
+left join employees e
   on p.employee_id = e.employee_id
 ```
 
 The SQL example for a right join is:
 ```sql
 select *
-from EmployeesModel e
-right join PetsModel p
+from employees e
+right join pets p
   on p.employee_id = e.employee_id
 ```
 
 In SQLAlchemy ORM, we use outerjoin to specify which table we want to join against. There isn't a left or right join specified because SQLAlchemy ORM knows that the left and right joins are opposites, so there is only one way to do the joins we did above.
+
+Essentially, an outerjoin represents a left join.
 
 For the join to get pet names only employees with pets, the syntax is:
 ```python
@@ -448,8 +419,8 @@ Let's say that we want to find the pet names of pets allowed in the office. Sinc
 The SQL example we are trying to do:
 ```sql
 select *
-from PetInfoModel i
-join OfficePetsModel o
+from pet_info i
+join office_pets o
   on i.pet_breed = o.pet_breed
 where o.allowed_in_office = 1
 ```
@@ -476,7 +447,7 @@ The advantage of doing it this way is that we can get the object without every h
 For our case, the SQL we are trying to do is:
 ```sql
 select *
-from EmployeesModel
+from employees
 where employee_id = 5
 ```
 
@@ -517,7 +488,7 @@ Note: There is also max, min, sum and many other aggregate functions. To see thi
 The SQL example we are trying to do:
 ```sql
 select count(pet_name)
-from PetInfoModel
+from pet_info
 ```
 
 To do this, the syntax is:
@@ -543,7 +514,7 @@ Let's say that we want to get the count of distinct pet species in KF. This mean
 The SQL example we are trying to do:
 ```sql
 select count(distinct pet_species) as unique_pet_species_count
-from PetInfoModel
+from pet_info
 ```
 
 To do this, we simply add .distinct() at the end of our query attribute. The aggregate function and alias are defined in the query selector itself, while the .distinct() is added as an attribute of query.
@@ -566,7 +537,7 @@ This sounds complicated, but it's not too bad.
 The SQL example we are trying to do:
 ```sql
 select employee_id, count(*) as pet_count
-from PetsModel
+from pets
 group by employee_id
 ```
 
@@ -585,8 +556,8 @@ Let's say we aren't satisfied with getting the employee_id and pet_count - we wa
 The SQL example we are trying to do:
 ```sql
 select employee_name, count(*) as pet_count
-from PetsModel p 
-left join EmployeesModel e
+from pets p 
+left join employees e
   on e.employee_id = p.employee_id
 group by employee_name
 ```
@@ -608,8 +579,8 @@ We cannot use the where clause in SQL, or the filter clause in SQLAlchemy ORM, b
 The SQL example we are trying to do:
 ```sql
 select employee_name, count(*) as pet_count
-from PetsModel p 
-left join EmployeesModel e
+from pets p 
+left join employees e
   on e.employee_id = p.employee_id
 group by employee_name
 having count(*) > 1
@@ -630,19 +601,21 @@ Let's say we want that we want to see which pets have pet insurance for all empl
 
 The first part of the SQL example we are trying to do is similar to the one above:
 ```sql
+(
 select employee_id, count(*) as pet_count
-from PetsModel p 
-left join EmployeesModel e
+from pets p 
+left join employees e
   on e.employee_id = p.employee_id
 group by employee_id
 having count(*) > 1
+) t1
 ```
 
 The second part of the SQL example we are trying to do is:
 ```sql
 select pet_name 
-from (the table we created in the first part) t1
-left join InsuranceModel i
+from t1
+left join insurance i
   on i.employee_id = t1.employee_id
 where insured = True
 ```
@@ -652,15 +625,16 @@ The full SQL query will look like this:
 select pet_name
 from (
 	select employee_id, count(*) as pet_count
-	from PetsModel p 
-	left join EmployeesModel e
+	from pets p 
+	left join employees e
 	  on e.employee_id = p.employee_id
 	group by employee_id
 	having count(*) > 1
 	) t1
-left join InsuranceModel i
+left join insurance i
   on i.employee_id = t1.employee_id
 where insured = True
+```
 
 To transform this into SQLAlchemy ORM syntax, we can break the query into two parts, like we did when constructing the SQL statement.
 
@@ -702,16 +676,196 @@ with AppSession("kungfu_pets") as session:
 
 
 ## SQLAlchemy: Loading Relationships for Tables
-### Load a relationship with a specific loader options
+A strong advantage of SQLAlchemy ORM is that it provides a way to control the way related objects get loaded when querying. This means that we can increase efficiency for common joins, load only certain items if they are not used as often, and raise exceptions upon loading if we need to.
+
+This section reviews the different types of common relationship loading techniques.
+
+### Lazy Loading
+This is the default loading technique used. It uses SELECT when an attribute needs to be accessed to lazily load a related reference on a single object. 
+
 ```python
+from sqlalchemy.orm import lazyload
+
 with AppSession("kungfu_pets") as session:
     session.query(EmployeesModel)
     .options(
-        LoaderType(EmployeesModel.relationship)
+        lazyload(EmployeesModel.pets)
     )
     .all()
 ```
 
+The SQL that is emitted is the following:
+```sql
+SELECT employees.employee_id, employees.employee_name,
+pets.pet_name, pets.employee_id
+FROM employees
+WHERE [pet_object].employee_id = employees.employee_id
+```
+
+Note that the entire relationship between EmployeesModel and PetsModel is not loaded, only the relationship for a specific PetModel instance is loaded against the EmployeesModel table.
+
+Lazy loading is particularly useful when there is a simple many-to-one relationship and the related object can be identified by its primary key alone and the object is present in the current session. Otherwise, lazy loading can be quite expensive for loading lots of objects because for any N objects loaded, accessing their lazy-loaded attributes means there will be N+1 SELECT statements emitted.
+
+### Raise Loading
+This is one way to mitigate the undesired effects of lazy loading, such as the N+1 problem mentioned above. The raise load strategy replaces the behavior of lazy loading with an informative error. If code attempts to access an attribute that ha the raise load strategy, an ORM exception is raised.
+
+```python
+from sqlalchemy.orm import raiseload
+
+with AppSession("kungfu_pets") as session:
+    session.query(EmployeesModel)
+    .options(
+        raiseload(EmployeesModel.pets)
+    )
+    .all()
+```
+
+Now, the EmployeesModel will raise an error when a join is attempted on PetsModel, even though they have a defined relationship. This is because we want to alert the user that perform the defined loader strategy, which in this case is the default loader strategy, lazy loading , will be expensive and is unwanted. 
+
+If we do want to specify a specific loader strategy for this relationship, we can use the raise loader strategy to prevent all other joins.
+
+
+```python
+from sqlalchemy.orm import raiseload, joinedload
+
+with AppSession("kungfu_pets") as session:
+    session.query(EmployeesModel)
+    .options(
+        joinedload(EmployeesModel.pets), raiseload('*')
+    )
+    .all()
+```
+
+This means that we will use eager loading to load the relationship between EmployeesModel and PetsModel, and all other relationships between either EmployeesModel or PetsModel that are attempted will raise an ORM exception. If we wanted to be more specific and raise exceptions for when a user attempts to join the EmployeesModel with any model besides PetModel (which we will load with eager loading still), we can write Load to specify this level of detail:
+
+```python
+from sqlalchemy.orm import raiseload, joinedload, Load
+
+with AppSession("kungfu_pets") as session:
+    session.query(EmployeesModel)
+    .options(
+        joinedload(EmployeesModel.pets), Load(EmployeesModel).raiseload('*')
+    )
+    .all()
+```
+
+In this example, if PetsModel was joined on with another table besides EmployeeModel, an exception would not be raised because of the way we configured the raiseload.
+
+### Joined Eager Loading
+This is the fundamental way to do eager laoding in ORM. It works by connecting a JOIN to the SELECT statement emitted by a query and populates the target collection from the same result as that of the parent. This means that number of queries is reduced because the model's relationship data is loaded while querying the model either through a JOIN or subquery.
+
+Eager loading is helpful when you know that multiple fields from a table and its relationship would be used in code. If you don't need multiple fields or the columns from the relationship, then use eager loading could make your API slower.
+
+To set up joined eager loading for a relatoinship, you have to first define it at the mapping level:
+```python
+class PetsModel(BaseDbModel):
+    __tablename__ = "pets"
+
+    pet_name = Column("pet_name", String(100), primary_key=True)
+    employee_id = Column(ForeignKey(employees.employee_id))
+
+    employees = relationship(EmployeesModel, back_populates="pets", lazy="joined")
+```
+
+In the snippet above, we just added lazy="joined" to the relationship defined in EmployeesModel. If we wanted to only retrieve data when the foreign key is not null, we can use an innerjoin, and define it in the mapping level as such:
+```python
+class PetsModel(BaseDbModel):
+    __tablename__ = "pets"
+
+    pet_name = Column("pet_name", String(100), primary_key=True)
+    employee_id = Column(ForeignKey(employees.employee_id), nullable=False)
+
+    employees = relationship(EmployeesModel, back_populates="pets", lazy="joined")
+```
+
+The ORM example of how to do a simle joined eager load is to do this:
+
+```python
+from sqlalchemy.orm import joinedload
+
+with AppSession("kungfu_pets") as session:
+    session.query(EmployeesModel)
+    .options(
+        joinedload(EmployeesModel.pets)
+    )
+    .all()
+```
+
+And if we want to do an innerjoin, we would simply add the innerjoin argument:
+
+```python
+from sqlalchemy.orm import joinedload
+
+with AppSession("kungfu_pets") as session:
+    session.query(EmployeesModel)
+    .options(
+        joinedload(EmployeesModel.pets, innerjoin=True)
+    )
+    .all()
+```
+
+The SQL that is emmitted by using the joinedload() loader option (using the simple left join, although you can subsitute inner to perform the innerjoin shown above) is:
+
+```sql
+SELECT employees.employee_id, employees.employee_name,
+pets.pet_name, pets.employee_id
+FROM employees e
+LEFT JOIN pets p
+  on p.employee_id = e.employee_id
+```
+
+### Subquery Eager Loading
+Subquery loading is very similar to joined eager loading, but instead of the adding lazy="joined" in the relationship attribute in the mapped class, you add lazy="subquery". And rather than use joinedload(), you use subqueryload().
+
+The operation emits a second SELECT statement for each relationship to be loaded, across all result objects at once. 
+
+Here's how the mapped class would look for subquery eager loading:
+```python
+class PetsModel(BaseDbModel):
+    __tablename__ = "pets"
+
+    pet_name = Column("pet_name", String(100), primary_key=True)
+    employee_id = Column(ForeignKey(employees.employee_id))
+
+    employees = relationship(EmployeesModel, back_populates="pets", lazy="subquery")
+```
+
+And the actual ORM code would be:
+```python
+from sqlalchemy.orm import joinedload
+
+with AppSession("kungfu_pets") as session:
+    session.query(EmployeesModel)
+    .options(
+        subqueryload(EmployeesModel.pets)
+    )
+    .filter_by(employee_name = "Tony")
+    .all()
+```
+
+The equivalent SQL statement would then be:
+
+```sql
+SELECT pets.pet_name, pets.employee_id,
+t1.employee_id, t1.employee_name
+FROM (
+    SELECT employees.employee_id, employees.employee_name
+    FROM employees
+    WHERE employees.employee_name = 'Tony'
+) AS t1
+JOIN pets
+  ON pets.employee_id = t1.employee_id
+ORDER BY t1.employee_id, pets.pet_name
+```
+
+The subquery load allows the original query to proceed without changing; we don't need to specify a LEFT JOIN, which could make it more efficient. It also allows for many collections to be eagerly loaded without producing a singer query that has many JOINs, which can be even less efficient. Each relationship is laoded in a fully separate query. Also, because the additonal query only needs to load the collection items and not the lead object, we can use an INNER JOIN for greater query efficiency.
+
+We shouldn't use subquery load when the original query is complex and that complexity is transferred to the relationship queries. This can slow down the backend. Also, subquery loading must load all the contents of all collections at once, and cannot do batched loading supplied by Query.yield_per(). However, there is a selectinload() loader that does resolve this issue. You can read moer about it here: https://docs.sqlalchemy.org/en/14/orm/loading_relationships.html#sqlalchemy.orm.selectinload
+
+
+### Extra Resources for Loading
+
+A good source to see how eager loading emits different SQL from lazy loading is here: https://dev.to/chidioguejiofor/eager-loading-vs-lazy-loading-in-sqlalchemy-5209
 where LoaderType can be joinedload(), lazyload(), selectinload().
 
 For more information, visit this link: 
