@@ -32,9 +32,9 @@ Here are our tables, primary and foreign keys:
 Database: kungfu_pets
 
 Table: employees
-Primary key: employee_id
+Primary key: id
 
-employee_id | employee_name  
+id          | employee_name  
 ------------|----------------
 1			|	Endurance
 2			|	Tony
@@ -43,57 +43,58 @@ employee_id | employee_name
 5 			|	Reed C.
 
 Table: pets
-Primary key: pet_name
+Primary key: id
 Foreign key: employee_id
 
-pet_name    | employee_id   
-------------|----------------
-Intel		|	1
-Misa		|	1
-Java	   	|	1	
-Shadow		|	2
-Callie  	|	4
-Yoshi		|	4
-Deohgie		|	4
+id    | pet_name    | employee_id   
+------|-------------|----------------
+1	  |	Intel		|	1
+2	  |	Misa		|	1
+3	  |	Java	   	|	1	
+4	  |	Shadow		|	2
+5	  |	Callie  	|	4
+6	  |	Yoshi		|	4
+7	  |	Deohgie		|	4
 
 Table: pet_info
-Primary key: pet_name
-
-pet_name    | pet_species   | pet_breed
-------------|---------------|-------------
-Intel		|	cat         | persian
-Misa		|	cat         | siamese
-Java	   	|	cat         | shorthair
-Shadow		|	dog         | dachshund
-Callie  	|	cat         | persian
-Yoshi		|	bird        | parrot
-Deohgie		|	dog         | husky
+Primary key: id
+	
+id	  | pet_name    | pet_species   | pet_breed
+------|-------------|---------------|-------------
+1	  |	Intel		|	cat         | persian
+2	  |	Misa		|	cat         | siamese
+3	  |	Java	   	|	cat         | shorthair
+4	  |	Shadow		|	dog         | dachshund
+5	  |	Callie  	|	cat         | persian
+6	  |	Yoshi		|	bird        | parrot
+7	  |	Deohgie		|	dog         | husky
 
 Table: insurance
-Primary key: pet_name
+Primary key: id
+Foreign key: employee_id
 
-employee_id | pet_name      | insured?
-------------|---------------|-------------
-1			|	Intel       | True
-1			|	Misa        | False
-1			|	Java	    | True
-2			|	Shadow	    | True
-4 	        |	Callie      | True 
-4	    	|	Yoshi       | False
-4	     	|	Deohgie		| False
+id	  |	employee_id | pet_name      | insured?
+------|-------------|---------------|-------------
+1	  | 1			|	Intel       | True
+2	  | 1			|	Misa        | False
+3	  |	1			|	Java	    | True
+4	  |	2			|	Shadow	    | True
+5	  |	4 	        |	Callie      | True 
+6	  |	4	    	|	Yoshi       | False
+7	  |	4	     	|	Deohgie		| False
 
 Table: office_pets
-Primary key: pet_breed
+Primary key: id
 
-pet_breed   | allowed_in_office   
-------------|-------------------
-persian		|	True
-siamese		|	True
-shorthair 	|	True	
-dachschund	|	True
-persian 	|	True
-parrot		|	False
-husky		|	False
+id    |	pet_breed   | allowed_in_office   
+------|-------------|-------------------
+1	  | persian		|	True
+2	  |	siamese		|	True
+3	  |	shorthair 	|	True	
+4	  |	dachschund	|	True
+5	  |	persian 	|	True
+6	  |	parrot		|	False
+7	  |	husky		|	False
 
 <mark>Standards to follow: 1. whenever there is an ID column that has unique values and is a primary key, use UUID (employee_id column is the example in our tables above) 2. whenever there is a column with boolean values, use True/False as the values, as constraining the domain of possible values can help prevent errors</mark>
 
@@ -104,55 +105,67 @@ To get started with SQLAlchemy ORM, we have to have a way to somehow represent t
 The model inherits from a base model that the SQLAlchemy ORM library has created with us that has all the basics that any table will need to be transformed into an object. To get started, we import the base model, declarative_base, and then use that to create classes that represents the objects we are mapping the table from.
 
 ```python
-from sqlalchemy import Column, Integer, String, relationship
+from sqlalchemy import Column, String, ForeignKey, Boolean
+from sqlalchemy.orm import relationship
+from uuid import uuid4
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base
 
 BaseDbModel = declarative_base()
 
 
-class EmployeesModel(BaseDbModel):
-    __tablename__ = "employees"
+class EmployeeModel(BaseDbModel):
+    __tablename__ = "employee"
 
-    employee_id = Column("employee_id", UUID(as_uuid=True), primary_key=True, autoincrement=True, default=uuid4)		
-    employee_name = Column("employee_name", String(100))
+    id = Column(UUID(as_uuid=True), primary_key=True, autoincrement=True, default=uuid4)
+    employee_name = Column("employee_name", String(100), nullable=False)
 
-    pets = relationship(PetsModel, back_populates="employees")
+    pets = relationship("PetModel", back_populates="employees", lazy="joined")
+    insurance = relationship("InsuranceModel", back_populates="employees")
 
 
-class PetsModel(BaseDbModel):
-    __tablename__ = "pets"
+class PetModel(BaseDbModel):
+    __tablename__ = "pet"
 
-    pet_name = Column("pet_name", String(100), primary_key=True)
-    employee_id = Column(UUID(as_uuid=True), default=uuid4, ForeignKey(employees.employee_id))
+    id = Column(UUID(as_uuid=True), primary_key=True, autoincrement=True, default=uuid4)
+    pet_name = Column("pet_name", String(100), nullable=True)
+    employee_id = Column(ForeignKey(EmployeeModel.id))
 
-    employees = relationship(EmployeesModel, back_populates="pets")
-    petinfo = relationship(PetInfoModel, back_populates="petinfo")
+    employees = relationship("EmployeeModel", back_populates="pets")
+    petinfo = relationship("PetInfoModel", back_populates="pets")
 
 
 class PetInfoModel(BaseDbModel):
     __tablename__ = "pet_info"
 
-    pet_name = Column("pet_name", String(100), primary_key=True)
-    pet_species = Column("pet_species", String(100))
-    pet_breed = Column("pet_breed", String(100))
+    id = Column(UUID(as_uuid=True), primary_key=True, autoincrement=True, default=uuid4)
+    pet_name = Column("pet_name", String(100), nullable=False)
+    pet_species = Column("pet_species", String(100), nullable=True)
+    pet_breed = Column("pet_breed", String(100), nullable=True)
 
-    petinfo = relationship(PetsModel, back_populates="petinfo")
+    pets = relationship("PetModel", back_populates="petinfo")
+    officepets = relationship("OfficePetModel", back_populates="petinfo")
 
 
 class InsuranceModel(BaseDbModel):
     __tablename__ = "insurance"
 
-    employee_id = Column("employee_id", UUID(as_uuid=True), primary_key=True, default=uuid4)
-    pet_name = Column("pet_name", String(100))
+    id = Column(UUID(as_uuid=True), primary_key=True, autoincrement=True, default=uuid4)
+    employee_id = Column(ForeignKey(EmployeeModel.id))
+    pet_name = Column("pet_name", String(100), nullable=False)
     insured = Column("insured", Boolean)
 
+    employees = relationship("EmployeeModel", back_populates="insurance")
 
-class OfficePetsModel(BaseDbModel):
-    __tablename__ = "office_pets"
 
-    pet_breed = Column("pet_breed", String(100), primary_key=True)
+class OfficePetModel(BaseDbModel):
+    __tablename__ = "office_pet"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, autoincrement=True, default=uuid4)
+    pet_breed = Column("pet_breed", String(100), nullable=False)
     allowed_in_office = Column("allowed_in_office", Boolean)
+
+    petinfo = relationship("PetInfoModel", back_populates="officepets")
 ```
 
 
