@@ -46,55 +46,26 @@ Table: pets
 Primary key: id
 Foreign key: employee_id
 
-id    | pet_name    | employee_id   
-------|-------------|----------------
-1	  |	Intel		|	1
-2	  |	Misa		|	1
-3	  |	Java	   	|	1	
-4	  |	Shadow		|	2
-5	  |	Callie  	|	4
-6	  |	Yoshi		|	4
-7	  |	Deohgie		|	4
+id    | pet_name    | pet_species   | pet_breed   | employee_id
+------|-------------|---------------|-------------|--------------
+1	  |	Intel		|	cat         | persian	  |  1
+2	  |	Misa		|	cat         | siamese     |  1
+3	  |	Java	   	|	cat         | shorthair   |  1
+4	  |	Shadow		|	dog         | dachshund   |  2
+5	  |	Callie  	|	cat         | persian     |  4
+6	  |	Yoshi		|	bird        | parrot      |  4
+7	  |	Deohgie		|	dog         | husky       |  4
 
-Table: pet_info
-Primary key: id
-	
-id	  | pet_name    | pet_species   | pet_breed
-------|-------------|---------------|-------------
-1	  |	Intel		|	cat         | persian
-2	  |	Misa		|	cat         | siamese
-3	  |	Java	   	|	cat         | shorthair
-4	  |	Shadow		|	dog         | dachshund
-5	  |	Callie  	|	cat         | persian
-6	  |	Yoshi		|	bird        | parrot
-7	  |	Deohgie		|	dog         | husky
-
-Table: insurance
-Primary key: id
-Foreign key: employee_id
-
-id	  |	employee_id | pet_name      | insured?
-------|-------------|---------------|-------------
-1	  | 1			|	Intel       | True
-2	  | 1			|	Misa        | False
-3	  |	1			|	Java	    | True
-4	  |	2			|	Shadow	    | True
-5	  |	4 	        |	Callie      | True 
-6	  |	4	    	|	Yoshi       | False
-7	  |	4	     	|	Deohgie		| False
 
 Table: office_pets
-Primary key: id
 
 id    |	pet_breed   | allowed_in_office   
 ------|-------------|-------------------
-1	  | persian		|	True
+1	  | persian    	|	True
 2	  |	siamese		|	True
-3	  |	shorthair 	|	True	
-4	  |	dachschund	|	True
-5	  |	persian 	|	True
-6	  |	parrot		|	False
-7	  |	husky		|	False
+3	  |	dachshund	|	True	
+4	  |	parrot		|	True
+5	  |	husky		|	True
 
 <mark>Standards to follow: 1. whenever there is an ID column that has unique values and is a primary key, use UUID (employee_id column is the example in our tables above) 2. whenever there is a column with boolean values, use True/False as the values, as constraining the domain of possible values can help prevent errors</mark>
 
@@ -105,11 +76,11 @@ To get started with SQLAlchemy ORM, we have to have a way to somehow represent t
 The model inherits from a base model that the SQLAlchemy ORM library has created with us that has all the basics that any table will need to be transformed into an object. To get started, we import the base model, declarative_base, and then use that to create classes that represents the objects we are mapping the table from.
 
 ```python
-from sqlalchemy import Column, String, ForeignKey, Boolean
+from sqlalchemy import Column, ForeignKey, Boolean, String
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from uuid import uuid4
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import declarative_base
 
 BaseDbModel = declarative_base()
 
@@ -117,55 +88,30 @@ BaseDbModel = declarative_base()
 class EmployeeModel(BaseDbModel):
     __tablename__ = "employee"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, autoincrement=True, default=uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     employee_name = Column("employee_name", String(100), nullable=False)
 
-    pets = relationship("PetModel", back_populates="employees", lazy="joined")
-    insurance = relationship("InsuranceModel", back_populates="employees")
+    pets = relationship("PetModel", back_populates="employees")
 
 
 class PetModel(BaseDbModel):
     __tablename__ = "pet"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, autoincrement=True, default=uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     pet_name = Column("pet_name", String(100), nullable=True)
-    employee_id = Column(ForeignKey(EmployeeModel.id))
-
-    employees = relationship("EmployeeModel", back_populates="pets")
-    petinfo = relationship("PetInfoModel", back_populates="pets")
-
-
-class PetInfoModel(BaseDbModel):
-    __tablename__ = "pet_info"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, autoincrement=True, default=uuid4)
-    pet_name = Column("pet_name", String(100), nullable=False)
     pet_species = Column("pet_species", String(100), nullable=True)
     pet_breed = Column("pet_breed", String(100), nullable=True)
+    employee_id = Column(UUID(as_uuid=True), ForeignKey(EmployeeModel.id), nullable=False)
 
-    pets = relationship("PetModel", back_populates="petinfo")
-    officepets = relationship("OfficePetModel", back_populates="petinfo")
-
-
-class InsuranceModel(BaseDbModel):
-    __tablename__ = "insurance"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, autoincrement=True, default=uuid4)
-    employee_id = Column(ForeignKey(EmployeeModel.id))
-    pet_name = Column("pet_name", String(100), nullable=False)
-    insured = Column("insured", Boolean)
-
-    employees = relationship("EmployeeModel", back_populates="insurance")
+    employees = relationship("EmployeeModel", back_populates="pets")
 
 
 class OfficePetModel(BaseDbModel):
     __tablename__ = "office_pet"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, autoincrement=True, default=uuid4)
-    pet_breed = Column("pet_breed", String(100), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    pet_breed = Column("pet_breed", String(100))
     allowed_in_office = Column("allowed_in_office", Boolean)
-
-    petinfo = relationship("PetInfoModel", back_populates="officepets")
 ```
 
 
@@ -174,10 +120,10 @@ We are going to show some common queries using made-up problems that utilize our
 
 
 ### Selecting certain columns ("select" clause in SQL)
-Let's say we only want to know the names of the pet name and pet breed at KF. This the SQL:
+Let's say we want to know which breeds are allowed in the office. This the SQL:
 ```sql
-select pet_name, pet_breed
-from pet_info
+select pet_breed, allowed_in_office
+from office_pet
 ```
 
 Using SQLAlchemy ORM syntax, we would have two ways to load a certain set of columns:
@@ -185,36 +131,36 @@ Using SQLAlchemy ORM syntax, we would have two ways to load a certain set of col
 1. Directly in the query clause
 ```python
 with AppSession("kungfu_pets") as session:
-    session.query(PetInfoModel.pet_name, PetInfoModel.pet_breed).all()
+    session.query(OfficePetModel.pet_breed, OfficePetModel.allowed_in_office).all()
 ```
 
 2. Using the options argument
 ```python
 with AppSession("kungfu_pets") as session:
-    session.query(PetInfoModel)
+    session.query(OfficePetModel)
     .options(
         load_only(
-            "pet_name",
-            "pet_breed"
+            "pet_breed",
+            "allowed_in_office"
         )
     )
     .all()
 ```
 
 ### Labeling columns with aliases ("as" in SQL)
-Let's say that we want to rename the columsn that we just selected to be specific to KF:
+Let's say that we want to rename the columsn that we just selected to be shorter:
 The SQL example we are trying to do:
 ```sql
-select pet_name as kf_pet_name, pet_breed as kf_pet_breed
-from pet_info
+select pet_breed as breed, allowed_in_office as allowed
+from office_pet
 ```
 
 This can be done in SQL Alchemy ORM like this:
 ```python
 with AppSession("kungfu_pets") as session:
     session.query(
-        PetInfoModel.pet_name.label("kf_pet_name"),
-        PetInfoModel.pet_breed.label("kf_pet_breed")
+        OfficePetModel.pet_breed.label("breed"),
+        OfficePetModel.allowed_in_office.label("allowed")
         )
     .all()
 ```
@@ -228,7 +174,7 @@ Let's say we only want information about five pets at KF (short attention span, 
 The SQL example we are trying to do:
 ```sql
 select pet_name, pet_breed
-from pet_info
+from pet
 limit 5
 ```
 
@@ -236,18 +182,18 @@ This can be done in SQL Alchemy ORM like this:
 ```python
 with AppSession("kungfu_pets") as session:
     session.query(
-        PetInfoModel.pet_name,
-        PetInfoModel.pet_breed
+        PetModel.pet_name,
+        PetModel.pet_breed
         )
     .limit(5)
 ```
 
 ### Filtering results by a condition ("where" clause in SQL)
-Now that we've looked at pet names and pet breeds, we want to know which ones are actually allowed in the office. This means we have to filter our OfficePetsModel table:
+Now that we've looked at pet names and pet breeds, we want to know which breeds are actually allowed in the office. This means we have to filter our OfficePetsModel table:
 The SQL example we are trying to do:
 ```sql
 select *
-from office_pets
+from office_pet
 where allowed_in_office = 1
 ```
 
@@ -256,17 +202,15 @@ There are two ways to do this in SQLAlchemy ORM.
 1. Use filter and specify the model, with column name as an attribute (allows for filtering on columns not pulled in by query clause)
 ```python
 with AppSession("kungfu_pets") as session:
-    session.query(OfficePetsModel)
-    .filter(OfficePetsModel.allowed_in_office==1)
-    .all()
+    session.query(OfficePetModel)
+    .filter(OfficePetModel.allowed_in_office==True)
 ```
 
 2. Use filter_by and specify just the attribute (uses keyword args, relies on columns pulled in query clause)
 ```python
 with AppSession("kungfu_pets") as session:
-    session.query(OfficePetsModel)
-    .filter_by(allowed_in_office=1)
-    .all()
+    session.query(OfficePetModel)
+    .filter_by(allowed_in_office=True)
 ```
 
 Both do the same things, but the syntax is slightly different. To do functions, using filter is easier because you can do it without function calls.
@@ -275,24 +219,23 @@ To apply another operator, instead of "==" or "=", you can type in ">" for great
 
 
 ### Filtering using a list of items ("in" operator in SQL)
-We want to know pet names for members of the Software Engineering team, which we know are related to employee_ids 1, 2 and 3.
+We want to know pet names only cats and dogs.
 
 The SQL example we are trying to do:
 ```sql
 select *
-from pets
-where employee_id in (1, 2, 3)
+from pet
+where pet_species in ("cat", "dog")
 ```
 
 To do this, we can define a list or a tuple with the values we want, as below:
 
 ```python
-list_of_values = [1, 2, 3]
+species = ["cat", "dog"]
 
 with AppSession("kungfu_pets") as session:
-    session.query(PetsModel)
-    .filter(PetsModel.employee_id.in_(list_of_values))
-    .all()
+    session.query(PetModel)
+    .filter(PetModel.pet_species.in_(species))
 ```
 
 This is useful when you have a pre-defined list of values that you want to search for in a column.
@@ -300,13 +243,13 @@ Look at this stackoverflow to see more: https://stackoverflow.com/questions/8603
 
 
 #### Excluding using a list of items ("not in" operator in SQL)
-Let's say we want to take a quick look at pet names of members who are not part of the Software Engineering team. Instead of looking up the employee_ids, we can just use the opposite operator, not in.
+Let's say we want to take a quick look at pet names of species that are not cat or dog. We can just use the opposite operator, not in.
 
 The SQL example we are trying to do:
 ```sql
 select *
-from pets
-where employee_id not in (1, 2, 3)
+from pet
+where pet_species not in ("cat", "dog")
 ```
 
 To do this, we can define a list or a tuple with the values we want, as below:
@@ -315,32 +258,27 @@ To do this, we can define a list or a tuple with the values we want, as below:
 list_of_values = [1, 2, 3]
 
 with AppSession("kungfu_pets") as session:
-    session.query(PetsModel)
-    .filter(not_(PetsModel.employee_id.in_(list_of_values)))
-    .all()
+    session.query(PetModel)
+    .filter(not_(PetModel.pet_species.in_(species)))
 ```
 
 This is useful when you have a pre-defined list of values that you want to exclude from a search.
 
 
 ### Filtering using operators ("<, >, >=, <=" operator in SQL)
-Since the employee_ids are simply integers, we realize that we can actually just use an operator to filter. Let's say we wanted to look again at Software Engineering employees that have pets (which we know have employee_ids of 1 to 3). 
-
-To do this, we can use something similar to what we used to find which pets were allowed in the office:
-
+Let's say we want to look at pet species that have insurance in between 5500 (exclusive) and 9000 (inclusive).
 The SQL example we are trying to do:
 ```sql
 select *
-from pets
-where employee_id > 0 and employee_id <= 3
+from insurance
+where insurance_cost > 5500 and insurance_cost <= 9000
 ```
 
 To do this, we use the and_ operator along with filter, as below:
 ```python
 with AppSession("kungfu_pets") as session:
-    session.query(PetsModel)
-    .filter(and_(PetsModel.employee_id>0, PetsModel.employee_id<=3))
-    .all()
+    session.query(InsuranceModel)
+    .filter(and_(InsuranceModel.insurance_cost>5500, InsuranceModel.insurance_cost<=9000))
 ```
 
 If we wanted to filter by multiple columns, we can skip the and_. Instead, we simply list the different columns we want to filter by in a comma. If we wanted to filter using or, we use the or_ operator in the same way as we did with the and_ in the example above.
@@ -352,9 +290,9 @@ Having a list of pet names by employee_ids is great, but having a list of pet na
 The SQL example we are trying to do:
 ```sql
 select *
-from employees e
-join pets p
-  on p.employee_id = e.employee_id
+from employee e
+join pet p
+  on p.employee_id = e.id
 ```
 
 There are two ways to do this. The first is to use the filter function in SQL Alchemy ORM to combine two tables based on the equivalency of values for a column.
@@ -362,19 +300,17 @@ There are two ways to do this. The first is to use the filter function in SQL Al
 To do this, we write:
 ```python
 with AppSession("kungfu_pets") as session:
-    session.query(EmployeesModel, PetsModel)
-    .filter(EmployeesModel.employee_id==PetsModel.employee_id)
-    .all()
+    session.query(EmployeeModel, PetModel)
+    .filter(EmployeeModel.id==PetModel.employee_id)
 ```
 
-That's great, but we there's an easier way to do this. Since EmployeesModel has a primary key, and PetsModel has a foreign key that has a defined relationship with the primary key in EmployeesModel, we can just use the join attribute without even specifying the columns - SQLAlchemy ORM knows to use the predefined relationship.
+That's great, but we there's an easier way to do this. Since EmployeeModel has a primary key, and PetModel has a foreign key that has a defined relationship with the primary key in EmployeeModel, we can just use the join attribute without even specifying the columns - SQLAlchemy ORM knows to use the predefined relationship.
 
 To do this, we write:
 ```python
 with AppSession("kungfu_pets") as session:
-    session.query(EmployeesModel)
-    .join(PetsModel)
-    .all()
+    session.query(EmployeeModel)
+    .join(PetModel)
 ```
 
 If there is not one foreign key, look below to see how to use the join syntax appropriately.
@@ -393,22 +329,22 @@ In essence, a left join and right join are just opposites, and flipping the orde
 
 Let's put this to use. Let's say that we only really want to know the employee names and pet names of employees who have pets. Because left and right joins are opposites, we can do it using both.
 
-To do the left join, we know that we want to use the PetsModel and join only employees from EmployeesModel that have employee_ids in PetsModel.
+To do the left join, we know that we want to use the PetModel and join only employees from EmployeeModel that have employee_id in PetModel.
 
 The SQL example for a left join is:
 ```sql
 select *
-from pets p
-left join employees e
-  on p.employee_id = e.employee_id
+from pet p
+left join employee e
+  on p.employee_id = e.id
 ```
 
 The SQL example for a right join is:
 ```sql
 select *
-from employees e
-right join pets p
-  on p.employee_id = e.employee_id
+from employee e
+right join pet p
+  on p.employee_id = e.id
 ```
 
 In SQLAlchemy ORM, we use outerjoin to specify which table we want to join against. There isn't a left or right join specified because SQLAlchemy ORM knows that the left and right joins are opposites, so there is only one way to do the joins we did above.
@@ -418,9 +354,8 @@ Essentially, an outerjoin represents a left join.
 For the join to get pet names only employees with pets, the syntax is:
 ```python
 with AppSession("kungfu_pets") as session:
-    session.query(PetsModel)
-    .outerjoin(EmployeesModel)
-    .all()
+    session.query(PetModel)
+    .outerjoin(EmployeeModel)
 ```
 
 SQLAlchemy ORM takes away the distinction and thus lets the order of tables guide the data included. The query function holds the table that you want to include all the data for, and the outerjoin holds the table that you want to display only the data found in the query clause's table.
@@ -431,25 +366,24 @@ Let's say that we want to find the pet names of pets allowed in the office. Sinc
 
 The SQL example we are trying to do:
 ```sql
-select *
-from pet_info i
-join office_pets o
-  on i.pet_breed = o.pet_breed
+select pet_name
+from pet p
+join office_pet o
+  on p.pet_breed = o.pet_breed
 where o.allowed_in_office = 1
 ```
 
 To do this, the syntax is:
 ```python
 with AppSession("kungfu_pets") as session:
-    session.query(PetsModel)
-    .join(OfficePetsModel, PetInfoModel.pet_breed==OfficePetsModel.pet_breed)
-    .filter(OfficePetsModel.allowed_in_office==1)
-    .all()
+    session.query(PetModel)
+    .join(OfficePetModel, PetModel.pet_breed==OfficePetModel.pet_breed)
+    .filter(OfficePetModel.allowed_in_office==True)
 ```
 
 ## SQLAlchemy: Advanced Recipes Using Tables
 ### Getting an instance of a primary key value without SQL
-Let's say that we want to find the employee_name associated with employee_id = 5. 
+Let's say that we want to see if Siamese cats are allowed in the office. If we have a UUID and that object has already been fetched, we can get the information with querying the database.
 
 In this scenario, let's say that we just started a session and have queried this exact same thing within the session. 
 
@@ -460,35 +394,18 @@ The advantage of doing it this way is that we can get the object without every h
 For our case, the SQL we are trying to do is:
 ```sql
 select *
-from employees
-where employee_id = 5
+from office_pet
+where id = "df88f7ec-0e6a-4aa9-b4d6-61394e8a9ddb"
 ```
 
-This basically means that we want to retrieve the object from the EmployeesModel that has an employee_id of 5. Because we are filtering based on a primary key of the EmployeesModel table, we can use the identity map to first check if we already have the object related to employee_id = 5 rather than querying our kungfu_pets database.
+This basically means that we want to retrieve the object from the OfficePetModel that has an id of df88f7ec-0e6a-4aa9-b4d6-61394e8a9ddb. Because we are filtering based on a primary key of the OfficePetModel table, we can use the identity map to first check if we already have the object related to id = df88f7ec-0e6a-4aa9-b4d6-61394e8a9ddb rather than querying our kungfu_pets database.
 
 To do this with SQLAlchemy ORM, all we do is:
 ```python
 with AppSession("kungfu_pets") as session:
-    session.query(EmployeesModel)
-    .get(5)
+    session.query(OfficePetModel)
+    .get("df88f7ec-0e6a-4aa9-b4d6-61394e8a9ddb")
 ```
-
-This will get the value of the primary key for the table in the query clause and return this, if it is in our identity map:
-
-class EmployeesModel:
-	employee_id: 5
-	employee_name: 'Reed C.'
-
-
-If we have multiple primary keys, we can pass a dictionary listing the primary keys and values that we are searching for in our identity map:
-
-```python
-with AppSession("kungfu_pets") as session:
-	session.query(EmployeesModel)
-	.get({employee_id: 5, "new_column": 'ML Engineer'})
-```
-
-where new_column is another primary key that we are defining for illustrative purposes.
 
 To learn more about get, read here: https://docs.sqlalchemy.org/en/14/orm/query.html
 
@@ -501,15 +418,25 @@ Note: There is also max, min, sum and many other aggregate functions. To see thi
 The SQL example we are trying to do:
 ```sql
 select count(pet_name)
-from pet_info
+from pet
 ```
 
-To do this, the syntax is:
+There are two ways to do this:
+
+The first way is:
 ```python
 from sqlalchemy.sql import func
 
 with AppSession("kungfu_pets") as session:
-    session.query(func.count(PetInfoModel.pet_name))
+    session.query(func.count(PetModel.pet_name))
+```
+
+The second way is:
+```python
+from sqlalchemy.sql import func
+
+with AppSession("kungfu_pets") as session:
+    session.query(PetModel.pet_name).count()
 ```
 
 If we wanted to specify a name, which is usually a good idea since the default name for an aggregate function is just the name of the aggregate function (in this case, count), we do:
@@ -517,7 +444,7 @@ If we wanted to specify a name, which is usually a good idea since the default n
 from sqlalchemy.sql import func
 
 with AppSession("kungfu_pets") as session:
-    session.query(func.count(PetInfoModel.pet_name).label("pet_name_count"))
+    session.query(PetModel.pet_name).count()
 ```
 
 ### Finding the count of unique values ("count distinct" in SQL)
@@ -526,62 +453,67 @@ Let's say that we want to get the count of distinct pet species in KF. This mean
 
 The SQL example we are trying to do:
 ```sql
-select count(distinct pet_species) as unique_pet_species_count
-from pet_info
+select count(distinct pet_species)
+from pet
 ```
 
-To do this, we simply add .distinct() at the end of our query attribute. The aggregate function and alias are defined in the query selector itself, while the .distinct() is added as an attribute of query.
+There are two ways to do this with ORM style syntax.
 
-
-This is how we do it:
+The first way is:
 ```python
 from sqlalchemy.sql import func
 
 with AppSession("kungfu_pets") as session:
-    session.query(func.count(PetInfoModel.pet_species).label("pet_name_count"))
+    session.query(func.count(PetModel.pet_species))
     .distinct()
 ```
 
+The second way is:
+```python
+from sqlalchemy.sql import func
+
+with AppSession("kungfu_pets") as session:
+    session.query(distinct(PetModel.pet_species)).count()
+```
+
 ### Grouping values to get aggregate calculations at a specific level ("group by" in SQL)
-Let's say we want to get a count of total pets that each employee has. This means that we can't just do an overall count - we want to first group the table by the employee_id column in PetsModel and then get a count of the number of rows for each employee_id (assuming that there are no duplicate pet_names in our PetsModel).
+Let's say we want to get a count of total pets that each employee has. This means that we can't just do an overall count - we want to first group the table by the employee_id column in PetModel and then get a count of the number of rows for each employee_id (assuming that there are no duplicate pet_names in our PetModel).
 
 This sounds complicated, but it's not too bad.  
 
 The SQL example we are trying to do:
 ```sql
 select employee_id, count(*) as pet_count
-from pets
+from pet
 group by employee_id
 ```
 
 This is how we do it using SQLAlchemy ORM:
 ```python
 with AppSession("kungfu_pets") as session:
-    session.query(PetsModel.employee_id,func.count(PetsModel.pet_name).label("pet_count"))
-    .group_by(PetsModel.employee_id)
-    .all()
+    session.query(PetModel.employee_id, func.count(PetModel.pet_name))
+    .group_by(PetModel.employee_id)
 ```
 
 In SQLAlchemy, for a count(*), it is standard to use the primary key as the column since that can make querying the database more efficient, and there should be a unique value for each row in the primary key column.
 
-Let's say we aren't satisfied with getting the employee_id and pet_count - we want the employee_name alongside the pet_count. This would make the output more understandable. To do this, we want to perform that same group by, but also join on the EmployeesModel table to get the name of the employees by joining based on the primay key, foreign key relationship we defined above.
+Let's say we aren't satisfied with getting the employee_id and pet_count - we want the employee_name alongside the pet_count. This would make the output more understandable. To do this, we want to perform that same group by, but also join on the EmployeeModel table to get the name of the employees by joining based on the primay key, foreign key relationship we defined above.
 
 The SQL example we are trying to do:
 ```sql
 select employee_name, count(*) as pet_count
-from pets p 
-left join employees e
-  on e.employee_id = p.employee_id
-group by employee_name
+from pet p 
+left join employee e
+  on e.id = p.employee_id
+group by e.employee_name
 ```
 
 To do this, we write the SQLAlchemy ORM statement like this:
 ```python
 with AppSession("kungfu_pets") as session:
-    session.query(EmployeesModel.employee_name, func.count(PetsModel.pet_name).label("pet_count"))
-    .join(EmployeesModel)
-    .group_by(EmployeesModel.employee_name)
-    .all()
+    session.query(EmployeeModel.employee_name, func.count(PetModel.pet_name))
+    .join(EmployeeModel)
+    .group_by(EmployeeModel.employee_name)
 ```
 
 ### Filtering results by aggregate calculations ("having" in SQL)
@@ -592,8 +524,8 @@ We cannot use the where clause in SQL, or the filter clause in SQLAlchemy ORM, b
 The SQL example we are trying to do:
 ```sql
 select employee_name, count(*) as pet_count
-from pets p 
-left join employees e
+from pet p 
+left join employee e
   on e.employee_id = p.employee_id
 group by employee_name
 having count(*) > 1
@@ -602,51 +534,49 @@ having count(*) > 1
 To do this, we write the SQLAlchemy ORM statement like this:
 ```python
 with AppSession("kungfu_pets") as session:
-    session.query(EmployeesModel.employee_name, func.count(PetsModel.pet_name).label("pet_count"))
-    .join(EmployeesModel)
-    .group_by(EmployeesModel.employee_name)
-    .having(func.count(PetsModel.pet_name) > 1)
+    session.query(EmployeeModel.employee_name, func.count(PetModel.pet_name))
+    .join(EmployeeModel)
+    .group_by(EmployeeModel.employee_name)
+    .having(func.count(PetModel.pet_name) > 1)
     .all()
 ```
 
 ### Subquerying using the query function
-Let's say we want that we want to see which pets have pet insurance for all employees that have at least one pet. This means that we need to first figure out which employees have at least one pet, and then use that information to figure out which pets have insurance.
+Let's say that we want to figure out the names of pets for employees that have more than one pet (>1). 
 
-The first part of the SQL example we are trying to do is similar to the one above:
+The first part of the SQL example has a similar structure to the one above:
 ```sql
 (
-select employee_id, count(*) as pet_count
-from pets p 
-left join employees e
-  on e.employee_id = p.employee_id
-group by employee_id
+select e.id, count(*) as pet_count
+from pet p 
+left join employee e
+  on e.id = p.employee_id
+group by e.id
 having count(*) > 1
 ) t1
 ```
 
 The second part of the SQL example we are trying to do is:
 ```sql
-select pet_name 
+select pet_name, t1
 from t1
-left join insurance i
-  on i.employee_id = t1.employee_id
-where insured = True
+left join pet q
+  on q.employee_id = t1.id
 ```
 
 The full SQL query will look like this:
 ```sql
-select pet_name
+select pet_name, t1
 from (
-	select employee_id, count(*) as pet_count
-	from pets p 
-	left join employees e
-	  on e.employee_id = p.employee_id
-	group by employee_id
+	select e.id, count(*) as pet_count
+	from pet p 
+	left join employee e
+	  on e.id = p.employee_id
+	group by e.id
 	having count(*) > 1
 	) t1
-left join insurance i
-  on i.employee_id = t1.employee_id
-where insured = True
+left join pet q
+  on q.employee_id = t1.id
 ```
 
 To transform this into SQLAlchemy ORM syntax, we can break the query into two parts, like we did when constructing the SQL statement.
@@ -654,37 +584,35 @@ To transform this into SQLAlchemy ORM syntax, we can break the query into two pa
 The first part looks like this:
 ```python
 with AppSession("kungfu_pets") as session:
-    t1 = session.query(EmployeesModel.employee_id, func.count(PetsModel.pet_name).label("pet_count"))
-    .join(EmployeesModel)
-    .group_by(EmployeesModel.employee_id)
-    .having(func.count(PetsModel.pet_name) > 1)
-    .all()
+    t1 = session.query(EmployeeModel.id, func.count(PetModel.pet_name).label("pet_count"))
+    .join(PetModel)
+    .group_by(EmployeeModel.id)
+    .having(func.count(PetModel.pet_name) > 1)
 ```
 
 
 The second part looks like this (we are within the same session):
 
 ```python
-	session.query(InsuranceModel.pet_name)
-	.join(InsuranceModel, InsuranceModel.employee_id==t1.employee_id)
-	.filter(InsuranceModel.insurance==True)
-	.all()
+	session.query(PetModel.pet_name, t1)
+	.join(t1, PetModel.employee_id==t1.c.id)
 ```
 
 When we combine the two parts, we get something like this:
 
 ```python
 with AppSession("kungfu_pets") as session:
-    t1 = session.query(EmployeesModel.employee_id, func.count(PetsModel.pet_name).label("pet_count"))
-    .join(EmployeesModel)
-    .group_by(EmployeesModel.employee_id)
-    .having(func.count(PetsModel.pet_name) > 1)
-    .all()
+    t1 = (
+        session.query(EmployeeModel.id, func.count(PetModel.pet_name).label("pet_count"))
+        .join(PetModel)
+        .group_by(EmployeeModel.id)
+        .having(func.count(PetModel.pet_name) > 1)
+    ).subquery()
 
-    session.query(InsuranceModel.pet_name)
-	.join(InsuranceModel, InsuranceModel.employee_id==t1.employee_id)
-	.filter(InsuranceModel.insurance==True)
-	.all()
+    result = (
+        session.query(PetModel.pet_name, t1)
+        .join(t1, PetModel.employee_id==t1.c.id)
+    )
 ```
 
 
@@ -700,19 +628,16 @@ This is the default loading technique used. It uses SELECT when an attribute nee
 from sqlalchemy.orm import lazyload
 
 with AppSession("kungfu_pets") as session:
-    session.query(EmployeesModel)
+    session.query(EmployeeModel)
     .options(
-        lazyload(EmployeesModel.pets)
+        lazyload(EmployeeModel.pets)
     )
-    .all()
 ```
 
 The SQL that is emitted is the following:
 ```sql
-SELECT employees.employee_id, employees.employee_name,
-pets.pet_name, pets.employee_id
-FROM employees
-WHERE [pet_object].employee_id = employees.employee_id
+SELECT employees.id, employees.employee_name
+FROM employee
 ```
 
 Note that the entire relationship between EmployeesModel and PetsModel is not loaded, only the relationship for a specific PetModel instance is loaded against the EmployeesModel table.
@@ -726,14 +651,13 @@ This is one way to mitigate the undesired effects of lazy loading, such as the N
 from sqlalchemy.orm import raiseload
 
 with AppSession("kungfu_pets") as session:
-    session.query(EmployeesModel)
+    session.query(EmployeeModel)
     .options(
-        raiseload(EmployeesModel.pets)
+        raiseload(EmployeeModel.pets)
     )
-    .all()
 ```
 
-Now, the EmployeesModel will raise an error when a join is attempted on PetsModel, even though they have a defined relationship. This is because we want to alert the user that perform the defined loader strategy, which in this case is the default loader strategy, lazy loading , will be expensive and is unwanted. 
+Now, the EmployeeModel will raise an error when a join is attempted on PetModel, even though they have a defined relationship. This is because we want to alert the user that perform the defined loader strategy, which in this case is the default loader strategy, lazy loading , will be expensive and is unwanted. 
 
 If we do want to specify a specific loader strategy for this relationship, we can use the raise loader strategy to prevent all other joins.
 
@@ -742,14 +666,13 @@ If we do want to specify a specific loader strategy for this relationship, we ca
 from sqlalchemy.orm import raiseload, joinedload
 
 with AppSession("kungfu_pets") as session:
-    session.query(EmployeesModel)
+    session.query(EmployeeModel)
     .options(
-        joinedload(EmployeesModel.pets), raiseload('*')
+        joinedload(EmployeeModel.pets), raiseload('*')
     )
-    .all()
 ```
 
-This means that we will use eager loading to load the relationship between EmployeesModel and PetsModel, and all other relationships between either EmployeesModel or PetsModel that are attempted will raise an ORM exception. If we wanted to be more specific and raise exceptions for when a user attempts to join the EmployeesModel with any model besides PetModel (which we will load with eager loading still), we can write Load to specify this level of detail:
+This means that we will use eager loading to load the relationship between EmployeeModel and PetModel, and all other relationships between either EmployeeModel or PetModel that are attempted will raise an ORM exception. If we wanted to be more specific and raise exceptions for when a user attempts to join the EmployeeModel with any model besides PetModel (which we will load with eager loading still), we can write Load to specify this level of detail:
 
 ```python
 from sqlalchemy.orm import raiseload, joinedload, Load
@@ -757,9 +680,8 @@ from sqlalchemy.orm import raiseload, joinedload, Load
 with AppSession("kungfu_pets") as session:
     session.query(EmployeesModel)
     .options(
-        joinedload(EmployeesModel.pets), Load(EmployeesModel).raiseload('*')
+        joinedload(EmployeeModel.pets), Load(EmployeeModel).raiseload('*')
     )
-    .all()
 ```
 
 In this example, if PetsModel was joined on with another table besides EmployeeModel, an exception would not be raised because of the way we configured the raiseload.
@@ -771,24 +693,24 @@ Eager loading is helpful when you know that multiple fields from a table and its
 
 To set up joined eager loading for a relatoinship, you have to first define it at the mapping level:
 ```python
-class PetsModel(BaseDbModel):
+class PetModel(BaseDbModel):
     __tablename__ = "pets"
 
     pet_name = Column("pet_name", String(100), primary_key=True)
-    employee_id = Column(ForeignKey(employees.employee_id))
+    employee_id = Column(ForeignKey(employees.id))
 
-    employees = relationship(EmployeesModel, back_populates="pets", lazy="joined")
+    employees = relationship(EmployeeModel, back_populates="pets", lazy="joined")
 ```
 
 In the snippet above, we just added lazy="joined" to the relationship defined in EmployeesModel. If we wanted to only retrieve data when the foreign key is not null, we can use an innerjoin, and define it in the mapping level as such:
 ```python
-class PetsModel(BaseDbModel):
+class PetModel(BaseDbModel):
     __tablename__ = "pets"
 
     pet_name = Column("pet_name", String(100), primary_key=True)
-    employee_id = Column(ForeignKey(employees.employee_id), nullable=False)
+    employee_id = Column(ForeignKey(employee.id), nullable=False)
 
-    employees = relationship(EmployeesModel, back_populates="pets", lazy="joined")
+    employees = relationship(EmployeeModel, back_populates="pets", lazy="joined")
 ```
 
 The ORM example of how to do a simle joined eager load is to do this:
@@ -797,11 +719,10 @@ The ORM example of how to do a simle joined eager load is to do this:
 from sqlalchemy.orm import joinedload
 
 with AppSession("kungfu_pets") as session:
-    session.query(EmployeesModel)
+    session.query(EmployeeModel)
     .options(
-        joinedload(EmployeesModel.pets)
+        joinedload(EmployeeModel.pets)
     )
-    .all()
 ```
 
 And if we want to do an innerjoin, we would simply add the innerjoin argument:
@@ -810,11 +731,10 @@ And if we want to do an innerjoin, we would simply add the innerjoin argument:
 from sqlalchemy.orm import joinedload
 
 with AppSession("kungfu_pets") as session:
-    session.query(EmployeesModel)
+    session.query(EmployeeModel)
     .options(
-        joinedload(EmployeesModel.pets, innerjoin=True)
+        joinedload(EmployeeModel.pets, innerjoin=True)
     )
-    .all()
 ```
 
 The SQL that is emmitted by using the joinedload() loader option (using the simple left join, although you can subsitute inner to perform the innerjoin shown above) is:
@@ -848,27 +768,26 @@ And the actual ORM code would be:
 from sqlalchemy.orm import joinedload
 
 with AppSession("kungfu_pets") as session:
-    session.query(EmployeesModel)
+    session.query(EmployeeModel)
     .options(
-        subqueryload(EmployeesModel.pets)
+        subqueryload(EmployeeModel.pets)
     )
     .filter_by(employee_name = "Tony")
-    .all()
 ```
 
 The equivalent SQL statement would then be:
 
 ```sql
-SELECT pets.pet_name, pets.employee_id,
-t1.employee_id, t1.employee_name
+SELECT pet.pet_name, pet.employee_id,
+t1.id, t1.employee_name
 FROM (
-    SELECT employees.employee_id, employees.employee_name
-    FROM employees
-    WHERE employees.employee_name = 'Tony'
+    SELECT employee.id, employee.employee_name
+    FROM employee
+    WHERE employee.employee_name = 'Tony'
 ) AS t1
-JOIN pets
-  ON pets.employee_id = t1.employee_id
-ORDER BY t1.employee_id, pets.pet_name
+JOIN pet
+  ON pet.employee_id = t1.id
+ORDER BY t1.id, pet.pet_name
 ```
 
 The subquery load allows the original query to proceed without changing; we don't need to specify a LEFT JOIN, which could make it more efficient. It also allows for many collections to be eagerly loaded without producing a singer query that has many JOINs, which can be even less efficient. Each relationship is laoded in a fully separate query. Also, because the additonal query only needs to load the collection items and not the lead object, we can use an INNER JOIN for greater query efficiency.
