@@ -1,6 +1,6 @@
 from sqlalchemy import not_, and_, distinct
 from db_init import initialize_db, PetSession
-from db.build_tables import populate_data
+from build_tables import build_stuff
 from sqlalchemy.sql import func
 from sqlalchemy.orm import load_only, lazyload, raiseload, joinedload
 from models.pets_model import *
@@ -9,7 +9,7 @@ from models.pets_model import *
 initialize_db()
 
 # populate data in tables
-populate_data()
+build_stuff()
 
 """ This section has example queries in the RECIPES.md file in this repo"""
 # Selecting certain columns ("select" clause in SQL)
@@ -22,6 +22,7 @@ with PetSession() as session:
     session.expunge_all()
     print("SELECT clause")
     print([r for r in result])
+
 
 with PetSession() as session:
     result = (session.query(OfficePetModel)
