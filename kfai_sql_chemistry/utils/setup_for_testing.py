@@ -1,10 +1,13 @@
-from sqlalchemy.engine import Engine, reflection
+from sqlalchemy import inspect
+from sqlalchemy.engine import Engine
 from sqlalchemy.schema import (DropConstraint, DropTable, ForeignKeyConstraint, MetaData, Table)
+
+from kfai_sql_chemistry.utils.db_setup import db_setup
 
 
 def setup_db_for_tests(engine, metadata):
-    with engine.connect() as connection:
-        metadata.create_all(engine)
+    db_setup(engine)
+    metadata.create_all(engine)
 
 
 def tear_down_db_for_tests(engine):
@@ -20,8 +23,8 @@ def _drop_everything(engine: Engine):
     # transactional DDL, i.e. Postgresql, MS SQL Server
     trans = conn.begin()
 
-    inspector = reflection.Inspector.from_engine(engine)
-
+    # inspector = reflection.Inspector.from_engine(engine)
+    inspector = inspect(engine)
     # gather all data first before dropping anything.
     # some DBs lock after things have been dropped in
     # a transaction.

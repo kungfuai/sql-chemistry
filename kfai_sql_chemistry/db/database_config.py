@@ -6,6 +6,13 @@ from dataclasses_json import LetterCase, Undefined, dataclass_json
 from sqlalchemy.engine.url import URL
 
 
+def _engine_string_transform(engine_name):
+    if "postgres" in engine_name:
+        # SQL Alchemy expects 'postgresql' if the engine is postgres.
+        return "postgresql"
+    return engine_name
+
+
 @dataclass_json(letter_case=LetterCase.CAMEL, undefined=Undefined.EXCLUDE)
 @dataclass
 class DatabaseConfig:
@@ -32,7 +39,7 @@ class DatabaseConfig:
 
     def make_url(self, query=None):
         return URL(
-            self.engine,
+            _engine_string_transform(self.engine),
             username=self.username,
             password=self.password,
             host=self.host,
