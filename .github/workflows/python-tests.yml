@@ -3,7 +3,11 @@
 
 name: Run Tests on Application
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+    branches:
+      - master
 
 jobs:
   deploy:
