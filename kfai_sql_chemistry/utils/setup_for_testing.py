@@ -1,11 +1,12 @@
 from sqlalchemy.engine import Engine, reflection
 from sqlalchemy.schema import (DropConstraint, DropTable, ForeignKeyConstraint, MetaData, Table)
 
+from kfai_sql_chemistry.utils.db_setup import db_setup
+
 
 def setup_db_for_tests(engine, metadata):
-    with engine.connect() as connection:
-        connection.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
-        metadata.create_all(engine)
+    db_setup(engine)
+    metadata.create_all(engine)
 
 
 def tear_down_db_for_tests(engine):
