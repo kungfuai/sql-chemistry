@@ -1,38 +1,56 @@
-from db_init import initialize_db
-from create_data_for_tables import *
-from add_data_to_tables import *
-from query_constructor import *
+from sqlalchemy.orm import load_only
+from db_init import initialize_db, PetSession
+from add_tables_to_db import add_data_to_tables
 
+from models.kfai_pets_model import OfficePetModel
 
 # connect to our database with sqlalchemy
 initialize_db("pet")
 
-
-# get data for tables
-employees_list = create_employees()
-pets_dicts = create_pets()
-office_pets_list = create_office_pets()
-insurance_list = create_insurance()
+# create sample data and add to our tables
+add_data_to_tables()
 
 
-# add data to tables
-create_employees_bulk(employees_list)
-create_insurance_bulk(insurance_list)
-create_office_pets_bulk(office_pets_list)
+if __name__ == "__main__":
+
+    """ Example code for using the SELECT clause with SQLAlchemy ORM"""
+    # let's say we wanted to get only the pet_breed and allowed_in_office columns for the office_pet table
+    # this shows how we can use select to get certain columns using query function in SQLAlchemy ORM
+    with PetSession() as session:
+        result = (
+            session.query(
+                OfficePetModel.pet_breed,
+                OfficePetModel.allowed_in_office
+            ).all())
+        session.expunge_all()
+        print("SELECT clause")
+        print([r for r in result])
+
+    # let's say that we wanted to get only the pet_breed and allowed_in_office columns a different way
+    # this shows howe can use options in SQLAlchemy ORM to get certain columns
+    with PetSession() as session:
+        result = (
+            session.query(OfficePetModel)
+                .options(load_only("pet_breed", "allowed_in_office"))
+                .all())
+        session.expunge_all()
+        print("SELECT with load_only")
+        print([r for r in result])
+
+    # let's say that we wanted to rename the pet_breed and allowed_in_office columns to be shorter
+    # this shows how to rename columns using label in SQLAlchemy ORM, which is like "AS" in SQL
+    with PetSession() as session:
+        result = (
+            session.query(
+                OfficePetModel.pet_breed.label("breed"),
+                OfficePetModel.allowed_in_office.label("allowed")
+            ).all())
+        print("SELECT AS clause")
+        print(result[0].keys())
 
 
-for key in pets_dicts:
-    add_pet_for_employee(key, pets_dicts[key])
 
 
-# select certain columns using query function
-query_select_columns()
-
-# select certain columns using options function
-load_select_columns()
-
-# rename columns using label in query function
-rename_columns()
 
 
 
