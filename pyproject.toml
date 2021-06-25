@@ -1,4 +1,7 @@
 
 [tool.taskipy.tasks]
+# starts the database
 "db:start"            = "docker-compose run --service-ports -d test_db"
+
+# tests the functionality of the kfai_sql_chemistry library
 "test"                = "python -m pytest"
