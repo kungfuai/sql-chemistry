@@ -1,16 +1,16 @@
 from sqlalchemy import Column, ForeignKey, Integer
 from sqlalchemy.orm import declarative_base, relationship
 
-BaseModel = declarative_base()
+BaseDBModel = declarative_base()
 
 
-class Address(BaseModel):
+class Address(BaseDBModel):
     __tablename__ = 'address'
 
     id = Column(Integer, primary_key=True)
 
 
-class Person(BaseModel):
+class Person(BaseDBModel):
     __tablename__ = 'person'
 
     id = Column(Integer, primary_key=True)

@@ -123,6 +123,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 ## Contact
 
 Endurance Idehen - endurance.idehen@kungfu.ai
+Krishi Sharma - krishi.sharma@kungfu.ai
 
 
 

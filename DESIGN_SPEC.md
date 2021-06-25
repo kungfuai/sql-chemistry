@@ -159,7 +159,7 @@ list_of_values = ['Krishna', 'Felix', 'Zhenchen']
 
 with AppSession("test") as session:
     session.query(TableModel)
-    .filter(~TableModel.column3._in(list_of_values))
+    .filter(TableModel.column3._in(list_of_values))
     .all()
 ```
 
@@ -306,22 +306,3 @@ or not present.
 To learn more about get, read here:
 https://docs.sqlalchemy.org/en/14/orm/query.html
 
-
-
-
-
-#### Future Stuff
-
-We can build a thin abstraction over SQLAlchemy to make it more
-approachable to the KungFu team. To do this, we can use these simple
-recipes and place them in a package within our library.
-
-(Come up with a plan for how to build this on Monday)
-
-May be a nicer solution
-```python
-with AppSession("test") as session:
-    session\
-        .Query(TableModel)\
-        .select_by("col1", "col2", "col3")
-```

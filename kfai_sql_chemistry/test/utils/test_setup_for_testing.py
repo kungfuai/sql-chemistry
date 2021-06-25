@@ -3,7 +3,7 @@ import unittest
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 
-from kfai_sql_chemistry.test.utils.models_for_testing.models import BaseModel
+from kfai_sql_chemistry.test.utils.models_for_testing.models import BaseDBModel
 from kfai_sql_chemistry.utils.setup_for_testing import setup_db_for_tests, tear_down_db_for_tests
 
 
@@ -11,7 +11,7 @@ class TestTestSetup(unittest.TestCase):
 
     def test_setup_works(self):
         engine: Engine = create_engine('sqlite://')
-        setup_db_for_tests(engine, BaseModel.metadata)
+        setup_db_for_tests(engine, BaseDBModel.metadata)
         engine.execute("SELECT * FROM person")
         engine.execute("SELECT * FROM address")
 
@@ -25,7 +25,7 @@ class TestTestSetup(unittest.TestCase):
 
     def test_teardown_works(self):
         engine: Engine = create_engine('sqlite://')
-        setup_db_for_tests(engine, BaseModel.metadata)
+        setup_db_for_tests(engine, BaseDBModel.metadata)
         results = engine.execute("PRAGMA foreign_key_list('person');")
         foreign_key_info = next(results)
         assert foreign_key_info[2] == 'address'
