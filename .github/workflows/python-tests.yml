@@ -4,7 +4,6 @@
 name: Run Tests on Application
 
 on:
-  push:
   pull_request:
     branches:
       - master
